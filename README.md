@@ -73,6 +73,11 @@ uv tool install --force dist/*.whl
 `data/<таблица>.json` записи одной таблицы
 Оба файла создаются автоматически при первой операции.
 
+## Запись asciinema
+
+Демонстрация работы 
+[![asciicast](https://asciinema.org/a/1269824.svg)](https://asciinema.org/a/1269824)
+
 ## Автор
 
 Кадошникова С.А., группа М26-555
