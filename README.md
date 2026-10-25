@@ -76,7 +76,7 @@ uv tool install --force dist/*.whl
 ## Запись asciinema
 
 Демонстрация работы 
-[![asciicast](https://asciinema.org/a/1269824.svg)](https://asciinema.org/a/1269824)
+https://asciinema.org/a/HEEjeiDdyycL7XmA
 
 ## Автор
 
