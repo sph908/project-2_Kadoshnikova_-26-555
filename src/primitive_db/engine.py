@@ -98,12 +98,16 @@ def commands(metadata, params):
             if conditions is None:
                 print('Для update нужно условие where')
                 return
+            unknown = [c for c in set_values if c not in metadata[table_name]]
+            if unknown:
+                print(f'В таблице {table_name} нет столбцов: {", ".join(unknown)}')
+                return           
             table_data = utils.load_table_data(table_name)
             data_updated = core.update(table_data, set_values, conditions)
             if data_updated is not None:
                 cacher = decorators.create_cacher()
                 utils.save_table_data(table_name, data_updated)
-            
+         
         case 'delete from':
             table_name = params[1]
             check_table_exists(metadata, table_name)
