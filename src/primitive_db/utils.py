@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
+
 from primitive_db import constants
+
 
 def load_metadata(filepath):
     """
@@ -20,6 +22,9 @@ def save_metadata(filepath, data):
         json.dump(data,f, ensure_ascii=False, indent=4)
 
 def get_table_path(table_name):
+    """
+    Функция для получения пути к данным заданной таблицы
+    """
     return Path(constants.TABLE_PATH) / f"{table_name}.json"
 
 def load_table_data(table_name):

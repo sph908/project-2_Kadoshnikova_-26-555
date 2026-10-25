@@ -3,6 +3,9 @@ from primitive_db.engine import run
 
 
 def main():
+    """
+    Точка входа в приложение: запускает основной цикл обработки команд
+    """
     run()
 
 if __name__ == "__main__":

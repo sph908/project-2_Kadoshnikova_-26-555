@@ -1,4 +1,4 @@
-from primitive_db import constants, utils, decorators
+from primitive_db import constants, decorators, utils
 
 
 @decorators.handle_db_errors
@@ -9,20 +9,31 @@ def create_table(metadata, table_name, columns):
     if table_name in metadata:
         raise ValueError(f'Таблица {table_name} уже существует')
     contains_key = False
+    if not table_name.isidentifier():
+        raise ValueError(
+        f"Недопустимое имя таблицы: {table_name}. "
+        f"Имя должно начинаться c буквы или подчёркивания")
+    if not columns:
+        raise ValueError("Нужно указать хотя бы один столбец, например name:str")
     for key in columns.keys():
         if key.lower() == 'id':
             contains_key = True
             break
-        if contains_key == False:
-            columns = {'ID' : 'int', **columns}
+    if not contains_key:
+        columns = {'ID' : 'int', **columns}
         
-        for value in columns.values():
-            if value not in constants.TYPES:
-                raise ValueError(
-                    f"Некорректный тип данных, "
-                    f"допустимые: {', '.join(constants.TYPES)}")
-        metadata.update({table_name: columns})
-        return metadata
+    for name,value in columns.items():
+        if value not in constants.TYPES:
+            raise ValueError(
+            f"Некорректный тип данных, "
+            f"допустимые: {', '.join(constants.TYPES)}")
+        if not name.isidentifier():
+            raise ValueError(
+            f"Недопустимое имя столбца: {name}. "
+            f"Имя должно начинаться c буквы или подчёркивания"
+        )
+    metadata.update({table_name: columns})
+    return metadata
 
 @decorators.handle_db_errors
 @decorators.confirm_action("удаление таблицы")
@@ -42,13 +53,15 @@ def validate_table(metadata, table_name, values):
         errors = []
         column_types = list(metadata.get(table_name).values())
         if len(values) != len(column_types)-1:
-            errors.append(f'Количество переданных столбцов не соответсвует количеству столбцов в {table_name}')
+            errors.append(f'''Кол-во переданных столбцов 
+не соответсвует изначальному в {table_name}''')
         else:
             for i in range(1, len(column_types)):
                 expected_type = constants.TYPES.get(column_types[i])
                 inserted_value = values[i-1]
                 if type(inserted_value) is not expected_type:
-                    errors.append(f"Несоответсвующий тип данных : значение {inserted_value} должно быть {column_types[i]}")
+                    errors.append(f'''Несоответсвующий тип данных: 
+{inserted_value} должно быть {column_types[i]}''')
         return errors
 
 @decorators.handle_db_errors
@@ -72,6 +85,16 @@ def insert(metadata, table_name, values):
     return data
 
 
+def is_matching_row(row, where_clause):
+    """
+    Функция проверяет соответсвие заданным условиям
+    """
+    for column, value in where_clause.items():
+        if row.get(column) != value:
+            return False
+    return True
+
+
 @decorators.log_time
 def select(table_data, where_clause=None):
     """
@@ -82,12 +105,7 @@ def select(table_data, where_clause=None):
     else: 
         filtered_data = []
         for row in table_data:
-            is_valid_row = True
-            for column, value in where_clause.items():
-                if row.get(column) != value:
-                    is_valid_row = False
-                    break
-            if is_valid_row:
+            if is_matching_row(row, where_clause):
                 filtered_data.append(row)
         return filtered_data
 
@@ -97,14 +115,10 @@ def update(table_data, set_clause, where_clause):
     Функция для изменения записей таблицы
     """
     for row in table_data:
-        is_valid_row = True
-        for column, value in where_clause.items():
-            if row.get(column) != value:
-                is_valid_row = False
-                break
-        if is_valid_row:
+        if is_matching_row(row, where_clause):
             row.update(set_clause)
     return table_data
+
 @decorators.confirm_action("удаление записей таблицы")
 def delete(table_data, where_clause):
     """
@@ -112,32 +126,41 @@ def delete(table_data, where_clause):
     """
     kept_rows = []
     for row in table_data:
-        is_valid_row = True
-        for column, value in where_clause.items():
-            if row.get(column) != value:
-                is_valid_row = False
-                break
-        if not is_valid_row:
+        if not is_matching_row(row, where_clause):
             kept_rows.append(row)
     return kept_rows
 
-def create_cacher():
-    """
-    Возвращает функцию кэширования, хранящую кэш в замыкании
-    """
-    cache = {}
-    def cache_result(key, value_func):
-        if key in cache:
-            return cache[key]
-        result = value_func()
-        cache[key] = result
-        return result
-
-    return cache_result
-
 
 def print_help():
+    """
+    Функция для вывода справочной информации
+    """
+    rows = []
+    rows_2 =[]
+    for command, description in constants.FUNCTIONS_NAMES.items():
+        rows.append(f"  {command} - {description}")
+        rows.append(f"      {constants.COMMAND_USAGE[command]}")
+    for command, description in constants.COMMANDS.items():
+        rows_2.append(f"{command} - {description}")
+    print(
+        f'''***Процесс работы с таблицей***
+Команды:
+{"\n".join(rows)}
+Допустимые типы столбцов:
+{', '.join(constants.TYPES)}
+Общие команды:
+{"\n".join(rows_2)}''')
     return
+
+
+def list_tables(metadata):
+    """
+    Возвращает список таблиц с перечнем их столбцов
+    """
+    return [
+        {"таблица": table_name, "столбцы": ", ".join(columns)}
+        for table_name, columns in metadata.items()
+    ]
 
 
 
