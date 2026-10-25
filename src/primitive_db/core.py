@@ -53,15 +53,19 @@ def validate_table(metadata, table_name, values):
         errors = []
         column_types = list(metadata.get(table_name).values())
         if len(values) != len(column_types)-1:
-            errors.append(f'''Кол-во переданных столбцов 
-не соответсвует изначальному в {table_name}''')
+            errors.append(
+                "Кол-во переданных столбцов не соответствует "
+                f"изначальному в {table_name}"
+            )
         else:
             for i in range(1, len(column_types)):
                 expected_type = constants.TYPES.get(column_types[i])
                 inserted_value = values[i-1]
                 if type(inserted_value) is not expected_type:
-                    errors.append(f'''Несоответсвующий тип данных: 
-{inserted_value} должно быть {column_types[i]}''')
+                    errors.append(
+                        f"Несоответствующий тип данных: значение {inserted_value} "
+                        f"должно быть {column_types[i]}"
+                    )
         return errors
 
 @decorators.handle_db_errors

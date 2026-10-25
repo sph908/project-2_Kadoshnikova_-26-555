@@ -62,6 +62,9 @@ def commands(metadata, params):
         
         case 'insert into':
             table_name = params[1]
+            if len(params) < 4 or params[2] != "values":
+                print(f'Формат: {constants.COMMAND_USAGE["insert into"]}')
+                return
             values = [parser.convert_value(v) for v in params[3:]]
             core.insert(metadata, table_name, values)
             cacher = decorators.create_cacher()
